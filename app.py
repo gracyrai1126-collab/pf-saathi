@@ -11,15 +11,60 @@ st.set_page_config(
 # ---------- DESIGN ----------
 st.markdown("""
 <style>
-.stApp { background-color: #F5F8FC; }
-[data-testid="stSidebar"] { background-color: #10243A; }
-[data-testid="stSidebar"] * { color: white !important; }
-h1, h2, h3 { color: #10243A; }
+.stApp {
+    background-color: #F4F7FB;
+    color: #172B4D;
+}
+[data-testid="stSidebar"] {
+    background-color: #10243A;
+}
+[data-testid="stSidebar"] * {
+    color: #F3F7FC;
+}
+/* Main content text only */
+section[data-testid="stMain"] p,
+section[data-testid="stMain"] label,
+section[data-testid="stMain"] h1,
+section[data-testid="stMain"] h2,
+section[data-testid="stMain"] h3,
+section[data-testid="stMain"] [data-testid="stMetricLabel"],
+section[data-testid="stMain"] [data-testid="stMetricValue"] {
+    color: #172B4D !important;
+}
+
+/* Sidebar text */
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2 {
+    color: #F3F7FC !important;
+}
+}
+h1, h2, h3 {
+    color: #10243A !important;
+    font-weight: 700 !important;
+}
 div[data-testid="stMetric"] {
-    background: white;
-    padding: 16px;
-    border-radius: 12px;
+    background: #FFFFFF;
+    padding: 18px;
+    border-radius: 14px;
     border: 1px solid #DCE5EF;
+}
+.block-container {
+    padding-top: 2rem;
+    max-width: 1200px;
+}
+.stButton > button {
+    background-color: #087F70;
+    color: white !important;
+    border-radius: 9px;
+    border: none;
+    font-weight: 600;
+}
+.stButton > button:hover {
+    background-color: #06675C;
+    color: white !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -29,7 +74,7 @@ def get_demo_data():
     return pd.DataFrame({
         "Month": [
             "2026-01", "2026-02", "2026-03", "2026-04",
-            "2026-05", "2026-06", "2026-07", "2026-08"
+            "2026-05", "2026-06", "2026-07", "2026-08"  
         ],
         "Employer": [
             "Company A", "Company A", "Company A", "Company A",
@@ -219,7 +264,6 @@ elif page == "Contribution Analyzer":
 
     df = analyze_ledger(get_demo_data())
     st.write(df.to_string(index=False))
-    st.write(claims.to_string(index=False))
 
     st.markdown("### Inspect one month")
     selected_month = st.selectbox("Choose a month", df["Month"].tolist())
@@ -257,7 +301,7 @@ elif page == "Claims Tracker":
             "Check the official process for correcting profile details."
         ]
     })
-    st.table(claims)
+    st.write(claims.to_string(index=False))
 
     st.info(
         "These statuses are examples, not actual claim records or verified "
