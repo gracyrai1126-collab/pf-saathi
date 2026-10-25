@@ -1,56 +1,81 @@
 import re
 import pandas as pd
 import streamlit as st
+import os
 
 st.set_page_config(
     page_title="PF Saathi",
     page_icon="🔐",
     layout="wide"
 )
+logo_path = r"C:\Users\DELL\.jupyter\pf-saathi\pf_saathi_logo.jpeg"
+
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, use_container_width=True)
+else:
+    st.sidebar.warning("PF Saathi logo file not found.")
 
 # ---------- DESIGN ----------
 st.markdown("""
+
 <style>
 .stApp {
-    background-color: #F4F7FB;
+    background: #F4F7FB;
     color: #172B4D;
 }
+
 [data-testid="stSidebar"] {
-    background-color: #10243A;
+    background: #10243A;
 }
+
 [data-testid="stSidebar"] * {
     color: #F3F7FC;
 }
-/* Main content text only */
-section[data-testid="stMain"] p,
-section[data-testid="stMain"] label,
-section[data-testid="stMain"] h1,
-section[data-testid="stMain"] h2,
-section[data-testid="stMain"] h3,
-section[data-testid="stMain"] [data-testid="stMetricLabel"],
-section[data-testid="stMain"] [data-testid="stMetricValue"] {
-    color: #172B4D !important;
-}
 
-/* Sidebar text */
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] label,
-section[data-testid="stSidebar"] span,
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2 {
-    color: #F3F7FC !important;
-}
-}
 h1, h2, h3 {
     color: #10243A !important;
     font-weight: 700 !important;
 }
-div[data-testid="stMetric"] {
+
+p, label, [data-testid="stMetricLabel"] {
+    color: #172B4D;
+}
+
+[data-testid="stMetric"] {
     background: #FFFFFF;
     padding: 18px;
     border-radius: 14px;
     border: 1px solid #DCE5EF;
+    border-radius: 14px;
+    padding: 18px;
 }
+
+[data-testid="stMetricValue"] {
+    color: #10243A !important;
+}
+
+.stButton > button,
+.stDownloadButton > button,
+.stLinkButton > a {
+    background: #087F70;
+    color: #FFFFFF !important;
+    border: none;
+    border-radius: 9px;
+    font-weight: 600;
+}
+
+.stButton > button:hover,
+.stDownloadButton > button:hover,
+.stLinkButton > a:hover {
+    background: #06675C;
+    color: #FFFFFF !important;
+}
+
+[data-testid="stDataFrame"],
+[data-testid="stTable"] {
+    background: #FFFFFF;
+}
+
 .block-container {
     padding-top: 2rem;
     max-width: 1200px;
@@ -66,7 +91,23 @@ div[data-testid="stMetric"] {
     background-color: #06675C;
     color: white !important;
 }
+/* Fix only the Ask Your Employer draft text area */
+div[data-testid="stTextArea"] textarea {
+    background-color: #FFFFFF !important;
+    color: #10243A !important;
+    -webkit-text-fill-color: #10243A !important;
+    caret-color: #10243A !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 10px !important;
+}
+
+/* Keep selected text readable */
+div[data-testid="stTextArea"] textarea::selection {
+    background-color: #BFE8E0 !important;
+    color: #10243A !important;
+}
 </style>
+
 """, unsafe_allow_html=True)
 
 # ---------- SYNTHETIC DEMO DATA ----------
@@ -175,9 +216,8 @@ with st.sidebar:
         [
             "Welcome",
             "Dashboard",
-            "Contribution Analyzer",
             "Claims Tracker",
-            "Neutral Query Generator",
+            "Ask Your Employer",
             "Scam Defence",
             "Ask PF Saathi",
             "Official Services"
@@ -206,17 +246,25 @@ if page == "Welcome":
         "It does not log in to or retrieve data from actual EPFO accounts."
     )
 
+    
     left, right = st.columns(2)
+
     with left:
-        if st.button("Explore Demo Dashboard", type="primary", use_container_width=True):
-            st.session_state.demo_mode = True
-            st.rerun()
-    with right:
         st.link_button(
             "Visit Official EPFO Website",
             "https://www.epfindia.gov.in/",
             use_container_width=True
         )
+
+    with right:
+        if st.button(
+            "Ask a Query",
+            type="primary",
+            use_container_width=True
+        ):
+            st.session_state["page_navigation"] = "Ask Your Employer"
+            st.rerun()
+
 
     st.markdown("### What you can do")
     a, b, c = st.columns(3)
@@ -224,110 +272,207 @@ if page == "Welcome":
     b.markdown("#### 📝 Take action\nPrepare a clear, neutral query.")
     c.markdown("#### 🛡️ Stay safe\nCheck messages for common scam warning signs.")
 
+
 # ---------- DASHBOARD ----------
 elif page == "Dashboard":
     df = analyze_ledger(get_demo_data())
+
     st.title("Your PF Dashboard")
     st.caption("Illustrative figures from fictional demo records.")
 
+    # Main summary cards
     c1, c2, c3 = st.columns(3)
-    c1.metric("Expected contributions", f"₹{df['Expected_PF'].sum():,.0f}")
-    c2.metric("Recorded contributions", f"₹{df['Posted_PF'].sum():,.0f}")
-    c3.metric("Total difference", f"₹{df['Difference'].sum():,.0f}")
 
+    c1.metric(
+        "Expected contributions",
+        f"₹{df['Expected_PF'].sum():,.0f}"
+    )
+    c2.metric(
+        "Recorded contributions",
+        f"₹{df['Posted_PF'].sum():,.0f}"
+    )
+    c3.metric(
+        "Total difference",
+        f"₹{df['Difference'].sum():,.0f}"
+    )
+
+    # Monthly contribution chart
     st.markdown("### Contribution overview")
-    st.write("Expected vs Recorded Contributions")
-    st.write("### Expected vs Recorded Contributions")
-    for _, row in df[["Month", "Expected_PF", "Posted_PF"]].iterrows():
-        st.write(
-            f"**{row['Month']}** | "
-            f"Expected: ₹{row['Expected_PF']:,.0f} | "
-            f"Posted: ₹{row['Posted_PF']:,.0f}")
 
-    issues = df[df["Difference"] != 0]
-    st.markdown("### Items to review")
+    chart_data = df.set_index("Month")[["Expected_PF", "Posted_PF"]]
+    st.bar_chart(chart_data, height=320)
+
+    # Inspect a month using a dropdown
+    st.markdown("### Inspect a month")
+
+    months = df["Month"].tolist()
+
+    selected_month = st.selectbox(
+        "Choose a month",
+        options=months,
+        index=len(months) - 1
+    )
+
+    row = df[df["Month"] == selected_month].iloc[0]
+
+    detail1, detail2, detail3 = st.columns(3)
+
+    detail1.metric(
+        "Expected",
+        f"₹{row['Expected_PF']:,.0f}"
+    )
+    detail2.metric(
+        "Posted",
+        f"₹{row['Posted_PF']:,.0f}"
+    )
+    detail3.metric(
+        "Difference",
+        f"₹{row['Difference']:,.0f}"
+    )
+
+    if row["Difference"] > 0:
+        st.warning(
+            f"❗ Check {row['Month']}: "
+            f"₹{row['Difference']:,.0f} difference. "
+            "Verify the official passbook and employer records."
+        )
+    else:
+        st.success(
+            "The expected and recorded amounts match in this demo."
+        )
+
+    # Detailed monthly ledger
+    st.markdown("### Complete contribution ledger")
+
     st.dataframe(
-        issues[["Month", "Employer", "Difference", "Classification", "Confidence"]],
+        df,
         use_container_width=True,
         hide_index=True
     )
 
-    st.warning(
-        "A difference is a signal to investigate, not proof of non-payment "
-        "or employer wrongdoing."
-    )
-
-# ---------- CONTRIBUTION ANALYZER ----------
-elif page == "Contribution Analyzer":
-    st.title("📊 Contribution Analyzer")
-    st.write("Explore the fictional contribution ledger.")
-
-    df = analyze_ledger(get_demo_data())
-    st.write(df.to_string(index=False))
-
-    st.markdown("### Inspect one month")
-    selected_month = st.selectbox("Choose a month", df["Month"].tolist())
-    row = df[df["Month"] == selected_month].iloc[0]
-
-    st.write(f"**Classification:** {row['Classification']}")
-    st.write(f"**Confidence:** {row['Confidence']}")
-    st.write(f"**Explanation:** {row['Explanation']}")
-    st.write(f"**Difference:** ₹{row['Difference']:,.2f}")
-
-    st.caption(
-        "Classification is rule-based and limited by the evidence in this demo. "
-        "It is not an official EPFO determination."
-    )
-
+    # Download the complete ledger
     st.download_button(
-        "Download demo analysis as CSV",
-        df.to_csv(index=False).encode("utf-8"),
-        file_name="pf_saathi_demo_analysis.csv",
+        "📥 Download contribution report (CSV)",
+        data=df.to_csv(index=False).encode("utf-8"),
+        file_name="pf_saathi_contribution_report.csv",
         mime="text/csv"
     )
+
+    # Discrepancies to review
+    issues = df[df["Difference"] != 0]
+
+    st.markdown("### Items to review")
+
+    if issues.empty:
+        st.success("No discrepancies found in this demo.")
+    else:
+        st.dataframe(
+            issues[
+                [
+                    "Month",
+                    "Employer",
+                    "Expected_PF",
+                    "Posted_PF",
+                    "Difference",
+                    "Classification",
+                    "Confidence"
+                ]
+            ],
+            use_container_width=True,
+            hide_index=True
+        )
+
+    st.warning(
+        "A difference is a signal to investigate, not proof of "
+        "non-payment or employer wrongdoing."
+    )
+
+    st.caption(
+        "Classification is rule-based and limited by the evidence "
+        "in this demo. It is not an official EPFO determination."
+    )
+
 
 # ---------- CLAIMS TRACKER ----------
 elif page == "Claims Tracker":
     st.title("📄 Claims Tracker")
-    st.caption("Fictional example statuses. No live EPFO claim is being checked.")
+    st.caption(
+        "Fictional example claims. These are not connected to EPFO."
+    )
 
-    claims = pd.DataFrame({
-        "Demo Claim ID": ["DEMO-001", "DEMO-002", "DEMO-003"],
-        "Claim Type": ["Transfer", "Withdrawal", "Profile correction"],
-        "Demo Status": ["Pending review", "Information needed", "Draft not submitted"],
-        "Suggested Next Step": [
-            "Check the official portal for current status.",
-            "Review the official portal for any stated requirement.",
-            "Check the official process for correcting profile details."
-        ]
-    })
-    st.write(claims.to_string(index=False))
+    stages = ["Draft", "Submitted", "Under review", "Approved", "Paid"]
+
+    claims = [
+        ("DEMO-001", "Transfer", "Under review"),
+        ("DEMO-002", "Withdrawal", "Approved"),
+        ("DEMO-003", "Profile correction", "Draft"),
+    ]
+
+    for claim_id, claim_type, current_stage in claims:
+        with st.container(border=True):
+            st.subheader(f"{claim_id} · {claim_type}")
+            st.write(f"**Current stage:** {current_stage}")
+
+            progress = (stages.index(current_stage) + 1) / len(stages)
+            st.progress(progress)
+
+            st.caption(" → ".join(stages))
 
     st.info(
-        "These statuses are examples, not actual claim records or verified "
-        "processing-time predictions."
+        "Approved and Paid are different stages. "
+        "Check the official EPFO portal for real claim status."
     )
 
 # ---------- QUERY GENERATOR ----------
-elif page == "Neutral Query Generator":
-    st.title("📝 Neutral Query Generator")
+elif page == "Ask Your Employer":
+    st.title("📝 Ask Your Employer")
     st.write("Create a polite draft based on a fictional ledger discrepancy.")
 
     df = analyze_ledger(get_demo_data())
     issues = df[df["Difference"] != 0]
 
-    month = st.selectbox("Select a month", issues["Month"].tolist())
-    row = issues[issues["Month"] == month].iloc[0]
-    draft = generate_query(row)
+    if issues.empty:
+        st.success("No discrepancies were found in the demo data.")
+    else:
+        month = st.selectbox(
+            "Select a month",
+            issues["Month"].tolist()
+        )
+        row = issues[issues["Month"] == month].iloc[0]
+        draft = generate_query(row)
 
-    st.text_area("Your draft", draft, height=260)
-    st.download_button(
-        "Download query draft",
-        draft,
-        file_name="pf_saathi_query_draft.txt",
-        mime="text/plain"
-    )
-    st.caption("Review all details before sending. No query is sent automatically.")
+        draft = st.text_area(
+            "Your draft",
+            value=draft,
+            height=260
+        )
+
+        blocked_words = sorted(set(
+            re.findall(
+                r"\b(fraud|stole|steal|cheat|theft|illegal)\b",
+                draft,
+                flags=re.IGNORECASE
+            )
+        ))
+
+        if blocked_words:
+            st.error(
+                "Please review accusatory wording before downloading: "
+                + ", ".join(blocked_words)
+            )
+
+        st.download_button(
+            "Download query draft",
+            data=draft,
+            file_name="pf_saathi_query_draft.txt",
+            mime="text/plain",
+            disabled=bool(blocked_words)
+        )
+
+        st.caption(
+            "Nothing is sent automatically. Review the draft before sending it."
+        )
+
 
 # ---------- SCAM DEFENCE ----------
 elif page == "Scam Defence":
